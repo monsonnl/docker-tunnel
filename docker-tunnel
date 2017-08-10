@@ -1,0 +1,27 @@
+#!/bin/bash
+
+LOCAL_DOCKER_SOCK=/var/run/docker.sock
+DT_PATH=$(mkdir -p ~/.docker-tunnel; cd ~/.docker-tunnel; pwd)
+
+case $1 in
+  init)
+    $0 disconnect
+    echo "# Set the following environment variable to use the docker-tunnel managed docker socket"
+    echo "export DOCKER_HOST=unix://${DT_PATH}/remote-docker.sock"
+    ;;
+  connect)
+    rm ${DT_PATH}/remote-docker.sock 2>/dev/null
+    ssh -M -S ${DT_PATH}/ssh-ctrl.sock -o ExitOnForwardFailure=true -f -L ${DT_PATH}/remote-docker.sock:${LOCAL_DOCKER_SOCK} $2 "bash -c 'while true; do sleep 1; done'"
+    echo $2 >${DT_PATH}/connected
+    ;;
+  disconnect)
+    if [[ -e ${DT_PATH}/ssh-ctrl.sock ]]; then
+      ssh -S ${DT_PATH}/ssh-ctrl.sock -O exit $(cat ${DT_PATH}/connected 2>/dev/null)
+    fi
+    rm ${DT_PATH}/connected ${DT_PATH}/remote-docker.sock 2>/dev/null
+    ln -s ${LOCAL_DOCKER_SOCK} ${DT_PATH}/remote-docker.sock
+    ;;
+  *)
+    cat ${DT_PATH}/connected 2>/dev/null
+    ;;
+esac
