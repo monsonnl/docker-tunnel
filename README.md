@@ -10,3 +10,51 @@ I needed a way to use my local docker client to manage remote docker machines so
 - **docker-tunnel disconnect**: Disconnect the ssh tunnel and reset the socket to a symlink to the local docker socket.
 - **docker-tunnel**: With no args will return the \[\<user\>@\]\<host\> currently connected to if any.
 
+For example here I have a local docker and remote docker that happen to be different versions so I can easily see which I'm connected to:
+
+```bash
+[monsonnl@localhost ~]$ echo $DOCKER_HOST
+
+[monsonnl@localhost ~]$ docker-tunnel
+[monsonnl@localhost ~]$ docker info | grep "Server Version"
+Server Version: 17.06.0-ce
+[monsonnl@localhost ~]$
+```
+
+We don't have the DOCKER_HOST set and there is no tunnel yet.  Lets init now and set the DOCKER_HOST but not connect yet and confirm we are still local.
+
+```bash
+[monsonnl@localhost ~]$ docker-tunnel init
+# Set the following environment variable to use the docker-tunnel managed docker socket
+export DOCKER_HOST=unix:///home/monsonnl/.docker-tunnel/remote-docker.sock
+[monsonnl@localhost ~]$ export DOCKER_HOST=unix:///home/monsonnl/.docker-tunnel/remote-docker.sock
+[monsonnl@localhost ~]$ echo $DOCKER_HOST
+unix:///home/monsonnl/.docker-tunnel/remote-docker.sock
+[monsonnl@localhost ~]$ docker-tunnel
+[monsonnl@localhost ~]$ docker info | grep "Server Version"
+Server Version: 17.06.0-ce
+[monsonnl@localhost ~]$
+```
+
+Lets connect now and see what we get.
+
+```bash
+[monsonnl@localhost ~]$ docker-tunnel connect remotehost
+monsonnl@remotehost's password: 
+[monsonnl@localhost ~]$ docker-tunnel
+remotehost
+[monsonnl@localhost ~]$ docker info | grep "Server Version"
+Server Version: 1.13.1
+[monsonnl@localhost ~]$
+```
+
+Wahoo! We are getting the remote machine's info.  Let's disconnect and confirm we return to local.
+
+```bash
+[monsonnl@localhost ~]$ docker-tunnel disconnect
+Exit request sent.
+[monsonnl@localhost ~]$ docker-tunnel
+[monsonnl@localhost ~]$ docker info | grep "Server Version"
+Server Version: 17.06.0-ce
+[monsonnl@localhost ~]$
+```
