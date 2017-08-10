@@ -10,6 +10,7 @@ case $1 in
     echo "export DOCKER_HOST=unix://${DT_PATH}/remote-docker.sock"
     ;;
   connect)
+    $0 disconnect
     rm ${DT_PATH}/remote-docker.sock 2>/dev/null
     ssh -M -S ${DT_PATH}/ssh-ctrl.sock -o ExitOnForwardFailure=true -f -L ${DT_PATH}/remote-docker.sock:${LOCAL_DOCKER_SOCK} $2 "bash -c 'while true; do sleep 1; done'"
     echo $2 >${DT_PATH}/connected
